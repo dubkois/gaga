@@ -279,7 +279,8 @@ template <typename DNA> class GA {
 	std::vector<std::map<std::string, std::map<std::string, double>>> genStats;
 
 	std::random_device rd;
-	std::default_random_engine globalRand = std::default_random_engine(rd());
+    size_t rndSeed = rd();
+    std::default_random_engine globalRand = std::default_random_engine(rndSeed);
 
 	std::function<void(Individual<DNA> &)> evaluator;
 	std::function<Individual<DNA> *()> selection;
@@ -287,6 +288,12 @@ template <typename DNA> class GA {
 	std::function<bool(double, double)> isBetter = [](double a, double b) { return a > b; };
 
  public:
+    // Ugly additions
+    size_t getRNDSeed(void) {  return rndSeed; }
+    void setRNDSeed (size_t seed) {  rndSeed = seed; globalRand = std::default_random_engine(seed); }
+
+    std::string getSaveFolder (void) const { return folder; }
+
 	/*********************************************************************************
 	 *                              CONSTRUCTOR
 	 ********************************************************************************/
@@ -1163,7 +1170,7 @@ template <typename DNA> class GA {
 	void createFolder(string baseFolder) {
 		if (baseFolder.back() != '/') baseFolder += "/";
 		struct stat sb;
-		char bFChar[baseFolder.length() + 1];
+        char *bFChar = new char [baseFolder.length() + 1];
 		strcpy(bFChar, baseFolder.c_str());
 		mkpath(bFChar, 0777);
 		auto now = system_clock::now();
@@ -1198,7 +1205,7 @@ template <typename DNA> class GA {
 		}
 		population.clear();
 		for (auto ind : o.at("population")) {
-			population.push_back(Individual<DNA>(DNA(ind.at("dna"))));
+            population.push_back(Individual<DNA>(DNA(ind.at("dna").get<string>())));
 			population[population.size() - 1].evaluated = false;
 		}
 	}
