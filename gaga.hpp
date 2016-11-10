@@ -1173,6 +1173,8 @@ template <typename DNA> class GA {
         char *bFChar = new char [baseFolder.length() + 1];
 		strcpy(bFChar, baseFolder.c_str());
 		mkpath(bFChar, 0777);
+        free(bFChar);
+
 		auto now = system_clock::now();
 		time_t now_c = system_clock::to_time_t(now);
 		struct tm *parts = localtime(&now_c);
