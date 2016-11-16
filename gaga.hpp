@@ -395,7 +395,7 @@ template <typename DNA> class GA {
 				}
 				if (doSaveGenStats) saveGenStats();
 				if (doSaveIndStats) saveIndStats();
-				prepareNextPop();
+                if(nbg < nbGeneration) prepareNextPop();
 				auto tnp1 = high_resolution_clock::now();
 				double tnp = std::chrono::duration<double>(tnp1 - tnp0).count();
 				if (verbosity >= 2) {
@@ -1173,7 +1173,7 @@ template <typename DNA> class GA {
         char *bFChar = new char [baseFolder.length() + 1];
 		strcpy(bFChar, baseFolder.c_str());
 		mkpath(bFChar, 0777);
-        free(bFChar);
+        delete[] bFChar;
 
 		auto now = system_clock::now();
 		time_t now_c = system_clock::to_time_t(now);
