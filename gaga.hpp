@@ -238,7 +238,7 @@ template <typename DNA> class GA {
 		evaluator = e;
 		evaluatorName = ename;
 	}
-	void setNewGenerationFunction(std::function<void(void)> f) {
+    void setNewGenerationFunction(std::function<void(GA &g)> f) {
 		newGenerationFunction = f;
 	}
 	void setMinNoveltyForArchive(double m) { minNoveltyForArchive = m; }
@@ -284,7 +284,7 @@ template <typename DNA> class GA {
 
 	std::function<void(Individual<DNA> &)> evaluator;
 	std::function<Individual<DNA> *()> selection;
-	std::function<void(void)> newGenerationFunction = []() {};
+    std::function<void(GA& ga)> newGenerationFunction = [](GA&) {};
 	std::function<bool(double, double)> isBetter = [](double a, double b) { return a > b; };
 
  public:
@@ -345,7 +345,7 @@ template <typename DNA> class GA {
 			if (verbosity >= 1) printStart();
 		}
 		for (int nbg = 0; nbg < nbGeneration; ++nbg) {
-			newGenerationFunction();
+            newGenerationFunction(*this);
 			auto tg0 = high_resolution_clock::now();
 #ifdef CLUSTER
 			MPI_distributePopulation();
