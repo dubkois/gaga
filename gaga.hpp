@@ -395,7 +395,8 @@ template <typename DNA> class GA {
 				}
 				if (doSaveGenStats) saveGenStats();
 				if (doSaveIndStats) saveIndStats();
-                if(nbg < nbGeneration) prepareNextPop();
+                if (nbg < nbGeneration-1)
+                    prepareNextPop();
 				auto tnp1 = high_resolution_clock::now();
 				double tnp = std::chrono::duration<double>(tnp1 - tnp0).count();
 				if (verbosity >= 2) {
