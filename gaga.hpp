@@ -290,8 +290,11 @@ template <typename DNA> class GA {
 
  public:
     // Ugly additions
-    size_t getRNDSeed(void) {  return rndSeed; }
-    void setRNDSeed (size_t seed) {  rndSeed = seed; globalRand = std::default_random_engine(seed); }
+    size_t getRNGSeed(void) {  return rndSeed; }
+    void setRNGSeed (size_t seed) {
+        rndSeed = seed;
+        globalRand = std::default_random_engine(seed);
+    }
 
     std::string getSaveFolder (void) const { return folder; }
 
