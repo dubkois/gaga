@@ -989,6 +989,7 @@ template <typename DNA> class GA {
                     if (!fs) {
                         cerr << "Cannot open the output file." << endl;
                     }
+
                     json j = i.dna.serialize();
                     j["infos"] = i.infos;
                     fs << j.dump();
