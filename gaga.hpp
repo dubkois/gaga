@@ -991,7 +991,7 @@ template <typename DNA> class GA {
                     }
 
                     json j = i.dna.serialize();
-                    j["infos"] = i.infos;
+                    j["infos"] = json::parse(i.infos);
                     fs << j.dump();
                     fs.close();
                 }
