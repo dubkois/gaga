@@ -341,13 +341,14 @@ template <typename DNA> class GA {
         }
     }
 
+    void prepareFirstGeneration (void) {
+        createFolder(folder);
+        if (verbosity >= 1) printStart();
+    }
+
     // "Vroum vroum"
     void step(int nbGeneration = 1) {
         if (!evaluator) throw std::invalid_argument("No evaluator specified");
-        if (currentGeneration == 0 && procId == 0) {
-            createFolder(folder);
-            if (verbosity >= 1) printStart();
-        }
         for (int nbg = 0; nbg < nbGeneration; ++nbg) {
             newGenerationFunction(*this);
             auto tg0 = high_resolution_clock::now();
@@ -1204,6 +1205,8 @@ template <typename DNA> class GA {
  public:
     void loadPop(string file) {
         std::ifstream t(file);
+        if (!t) throw std::invalid_argument("Could not open requested file");
+
         std::stringstream buffer;
         buffer << t.rdbuf();
         auto o = json::parse(buffer.str());
@@ -1215,7 +1218,7 @@ template <typename DNA> class GA {
         }
         population.clear();
         for (auto ind : o.at("population")) {
-            population.push_back(Individual<DNA>(DNA(ind.at("dna").get<string>())));
+            population.push_back(Individual<DNA>(DNA(ind.at("dna").dump())));
             population[population.size() - 1].evaluated = false;
         }
     }
