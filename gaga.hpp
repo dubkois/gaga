@@ -1221,6 +1221,7 @@ template <typename DNA> class GA {
             population.push_back(Individual<DNA>(DNA(ind.at("dna").dump())));
             population[population.size() - 1].evaluated = false;
         }
+        popSize = population.size();
     }
 
     void savePop() {
