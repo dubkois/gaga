@@ -869,7 +869,7 @@ template <typename DNA> class GA {
         const size_t l = 80;
         std::cout << tableHeader(l);
         std::ostringstream output;
-        const auto &globalStats = genStats[n].at("global");
+        const auto &globalStats = genStats.back().at("global");
         output << "Generation " << CYANBOLD << n << NORMAL << " ended in " << BLUE
                << globalStats.at("genTotalTime") << NORMAL << "s";
         std::cout << tableCenteredText(l, output.str(), BLUEBOLD NORMAL BLUE NORMAL);
@@ -887,7 +887,7 @@ template <typename DNA> class GA {
                << "s (x" << timeRatio << " ratio)";
         std::cout << tableCenteredText(l, output.str(), CYANBOLD NORMAL BLUE NORMAL "      ");
         std::cout << tableSeparation(l);
-        for (const auto &o : genStats[n]) {
+        for (const auto &o : genStats.back()) {
             if (o.first != "global") {
                 output = std::ostringstream();
                 output << GREYBOLD << "--◇" << GREENBOLD << std::setw(10) << o.first << GREYBOLD
