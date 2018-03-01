@@ -50,7 +50,11 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-#include "include/json.hpp"
+
+/*!
+ * It is the 'caller''s responsability to include the correct version
+ * *before* including this file */
+//#include "include/json.hpp"
 
 #define PURPLE "\033[35m"
 #define PURPLEBOLD "\033[1;35m"
@@ -393,10 +397,8 @@ template <typename DNA> class GA {
                 if (currentGeneration % saveGenInterval == 0) {
                     if (doSaveParetoFront) {
                         saveParetoFront();
-                    } else {
+                    } else if (nbSavedElites > 0)
                         saveBests(nbSavedElites);
-                        if (nbSavedElites > 0) saveBests(nbSavedElites);
-                    }
                 }
                 if (doSaveGenStats) saveGenStats();
                 if (doSaveIndStats) saveIndStats();
@@ -967,35 +969,33 @@ template <typename DNA> class GA {
      *                         SAVING STUFF
      ********************************************************************************/
     void saveBests(size_t n) {
-        if (n > 0) {
-            // save n bests dnas for all objectives
-            vector<string> objectives;
-            for (auto &o : population[0].fitnesses) {
-                objectives.push_back(o.first);  // we need to know objective functions
-            }
-            auto elites = getElites(objectives, n, population);
-            std::stringstream baseName;
-            baseName << folder << "/gen" << currentGeneration;
-            mkdir(baseName.str().c_str(), 0777);
-            if (verbosity >= 3) {
-                cerr << "created directory " << baseName.str() << endl;
-            }
-            for (auto &e : elites) {
-                int id = 0;
-                for (auto &i : e.second) {
-                    std::stringstream fileName;
-                    fileName << baseName.str() << "/" << e.first << "_" << i.fitnesses.at(e.first)
-                             << "_" << id++ << ".dna";
-                    std::ofstream fs(fileName.str());
-                    if (!fs) {
-                        cerr << "Cannot open the output file." << endl;
-                    }
-
-                    json j = i.dna.serialize();
-                    j["infos"] = json::parse(i.infos);
-                    fs << j.dump();
-                    fs.close();
+        // save n bests dnas for all objectives
+        vector<string> objectives;
+        for (auto &o : population[0].fitnesses) {
+            objectives.push_back(o.first);  // we need to know objective functions
+        }
+        auto elites = getElites(objectives, n, population);
+        std::stringstream baseName;
+        baseName << folder << "/gen" << currentGeneration;
+        mkdir(baseName.str().c_str(), 0777);
+        if (verbosity >= 3) {
+            cerr << "created directory " << baseName.str() << endl;
+        }
+        for (auto &e : elites) {
+            int id = 0;
+            for (auto &i : e.second) {
+                std::stringstream fileName;
+                fileName << baseName.str() << "/" << e.first << "_" << i.fitnesses.at(e.first)
+                         << "_" << id++ << ".dna";
+                std::ofstream fs(fileName.str());
+                if (!fs) {
+                    cerr << "Cannot open the output file." << endl;
                 }
+
+                json j = i.dna.serialize();
+                j["infos"] = json::parse(i.infos);
+                fs << j.dump();
+                fs.close();
             }
         }
     }
