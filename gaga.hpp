@@ -212,6 +212,8 @@ template <typename DNA> class GA {
     bool doSaveIndStats = false;          // save individuals stats to csv file
     SelectionMethod selecMethod = SelectionMethod::paretoTournament;
 
+    using GenerationEventFunction = std::function<void(GA& ga, uint gen)>;
+
     /********************************************************************************
      *                                 SETTERS
      ********************************************************************************/
@@ -243,8 +245,11 @@ template <typename DNA> class GA {
         evaluator = e;
         evaluatorName = ename;
     }
-    void setNewGenerationFunction(std::function<void(GA &g)> f) {
+    void setNewGenerationFunction(GenerationEventFunction f) {
         newGenerationFunction = f;
+    }
+    void setEndOfGenerationFunction(GenerationEventFunction f) {
+        endOfGenerationFunction = f;
     }
     void setMinNoveltyForArchive(double m) { minNoveltyForArchive = m; }
     void setIsBetterMethod(std::function<bool(double, double)> f) { isBetter = f; }
@@ -289,7 +294,10 @@ template <typename DNA> class GA {
 
     std::function<void(Individual<DNA> &)> evaluator;
     std::function<Individual<DNA> *()> selection;
-    std::function<void(GA& ga)> newGenerationFunction = [](GA&) {};
+
+    GenerationEventFunction newGenerationFunction = [](GA&, uint) {};
+    GenerationEventFunction endOfGenerationFunction = [](GA&, uint) {};
+
     std::function<bool(double, double)> isBetter = [](double a, double b) { return a > b; };
 
  public:
@@ -354,7 +362,7 @@ template <typename DNA> class GA {
     void step(int nbGeneration = 1) {
         if (!evaluator) throw std::invalid_argument("No evaluator specified");
         for (int nbg = 0; nbg < nbGeneration; ++nbg) {
-            newGenerationFunction(*this);
+            newGenerationFunction(*this, currentGeneration);
             auto tg0 = high_resolution_clock::now();
 #ifdef CLUSTER
             MPI_distributePopulation();
@@ -402,6 +410,7 @@ template <typename DNA> class GA {
                 }
                 if (doSaveGenStats) saveGenStats();
                 if (doSaveIndStats) saveIndStats();
+                endOfGenerationFunction(*this, currentGeneration);
                 if (nbg < nbGeneration-1)
                     prepareNextPop();
                 auto tnp1 = high_resolution_clock::now();
@@ -987,15 +996,10 @@ template <typename DNA> class GA {
                 std::stringstream fileName;
                 fileName << baseName.str() << "/" << e.first << "_" << i.fitnesses.at(e.first)
                          << "_" << id++ << ".dna";
-                std::ofstream fs(fileName.str());
-                if (!fs) {
-                    cerr << "Cannot open the output file." << endl;
-                }
 
                 json j = i.dna.serialize();
                 j["infos"] = json::parse(i.infos);
-                fs << j.dump();
-                fs.close();
+                DNA::toFile(fileName.str(), j);
             }
         }
     }
@@ -1023,12 +1027,9 @@ template <typename DNA> class GA {
             }
             filename << id++ << ".dna";
 
-            std::ofstream fs(filename.str());
-            if (!fs) {
-                std::cerr << "Cannot open the output file.\n";
-            }
-            fs << ind->dna.serialize();
-            fs.close();
+            json j = ind->dna.serialize();
+            j["infos"] = json::parse(ind->infos);
+            DNA::toFile(filename.str(), j);
         }
     }
 
