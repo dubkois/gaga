@@ -1060,7 +1060,7 @@ template <typename DNA, typename Ind = Individual<DNA>> class GA {
 				       << ", best: " << GAGA_COLOR_REDBOLD << std::setw(12) << o.second.at("best")
 				       << GAGA_COLOR_NORMAL;
 				std::cout << tableText(
-				    l, output.str(),
+                    l-4, output.str(),
 				    "    " GAGA_COLOR_GREYBOLD GAGA_COLOR_GREENBOLD GAGA_COLOR_GREYBOLD
 				        GAGA_COLOR_NORMAL GAGA_COLOR_YELLOWBOLD GAGA_COLOR_NORMAL
 				            GAGA_COLOR_YELLOW GAGA_COLOR_NORMAL GAGA_COLOR_GREENBOLD
