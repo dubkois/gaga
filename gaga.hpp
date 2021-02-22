@@ -972,21 +972,10 @@ template <typename DNA, typename Ind = Individual<DNA>> class GA {
 			}
 		}
 		for (auto &cs : customStats) {
-			{
-				std::ostringstream n;
-				n << cs.first << "_min";
-				currentGenStats["custom"][n.str()] = std::get<0>(cs.second);
-			}
-			{
-				std::ostringstream n;
-				n << cs.first << "_avg";
-				currentGenStats["custom"][n.str()] = std::get<1>(cs.second);
-			}
-			{
-				std::ostringstream n;
-				n << cs.first << "_max";
-				currentGenStats["custom"][n.str()] = std::get<2>(cs.second);
-			}
+                        std::string cs_name = "cs_" + cs.first;
+                        currentGenStats[cs_name]["worst"] = std::get<0>(cs.second);
+                        currentGenStats[cs_name]["avg"] = std::get<1>(cs.second);
+                        currentGenStats[cs_name]["best"] = std::get<2>(cs.second);
 		}
 		for (const auto &ind : lastGen) {
 			indTotalTime += ind.evalTime;
@@ -1049,8 +1038,11 @@ template <typename DNA, typename Ind = Individual<DNA>> class GA {
 		    l, output.str(),
 		    GAGA_COLOR_CYANBOLD GAGA_COLOR_NORMAL GAGA_COLOR_BLUE GAGA_COLOR_NORMAL "  ");
 		std::cout << tableSeparation(l);
+                bool hasCustom = false;
 		for (const auto &o : genStats[n]) {
-			if (o.first != "global" && o.first != "custom") {
+                        bool custom = (o.first.rfind("cs_", 0) == 0);
+                        hasCustom |= custom;
+                        if (o.first != "global" && !custom) {
 				output = std::ostringstream();
 				output << GAGA_COLOR_GREYBOLD << "-- " << GAGA_COLOR_GREENBOLD << std::setw(10)
 				       << o.first << GAGA_COLOR_GREYBOLD << " -> " << GAGA_COLOR_NORMAL
@@ -1067,16 +1059,26 @@ template <typename DNA, typename Ind = Individual<DNA>> class GA {
 				                GAGA_COLOR_NORMAL);
 			}
 		}
-		if (genStats[n].count("custom")) {
+                if (hasCustom) {
 			std::cout << tableSeparation(l);
-			for (const auto &o : genStats[n]["custom"]) {
-				output = std::ostringstream();
-				output << GAGA_COLOR_GREENBOLD << std::setw(15) << o.first << GAGA_COLOR_GREYBOLD
-				       << " -> " << GAGA_COLOR_NORMAL << std::setw(15) << o.second;
-				std::cout << tableCenteredText(
-				    l, output.str(), GAGA_COLOR_GREENBOLD GAGA_COLOR_GREYBOLD GAGA_COLOR_NORMAL);
-			}
-		}
+                        for (const auto &o : genStats[n]) {
+                                if (o.first.rfind("cs_", 0) != 0)   continue;
+                                output = std::ostringstream();
+                                output << GAGA_COLOR_GREYBOLD << "-- " << GAGA_COLOR_GREENBOLD << std::setw(10)
+                                       << o.first.substr(3) << GAGA_COLOR_GREYBOLD << " -> " << GAGA_COLOR_NORMAL
+                                       << " worst: " << GAGA_COLOR_YELLOW << std::setw(12) << o.second.at("worst")
+                                       << GAGA_COLOR_NORMAL << ", avg: " << GAGA_COLOR_YELLOWBOLD << std::setw(12)
+                                       << o.second.at("avg") << GAGA_COLOR_NORMAL
+                                       << ", best: " << GAGA_COLOR_REDBOLD << std::setw(12) << o.second.at("best")
+                                       << GAGA_COLOR_NORMAL;
+                                std::cout << tableText(
+                    l-4, output.str(),
+                                    "    " GAGA_COLOR_GREYBOLD GAGA_COLOR_GREENBOLD GAGA_COLOR_GREYBOLD
+                                        GAGA_COLOR_NORMAL GAGA_COLOR_YELLOWBOLD GAGA_COLOR_NORMAL
+                                            GAGA_COLOR_YELLOW GAGA_COLOR_NORMAL GAGA_COLOR_GREENBOLD
+                                                GAGA_COLOR_NORMAL);
+                        }
+                }
 		std::cout << tableFooter(l);
 	}
 
@@ -1189,7 +1191,7 @@ template <typename DNA, typename Ind = Individual<DNA>> class GA {
 					if (!fs) {
 						cerr << "Cannot open the output file." << endl;
 					}
-					fs << i.dna.serialize();
+                                        fs << i.toJSON().dump();
 					fs.close();
 				}
 			}
@@ -1239,10 +1241,12 @@ template <typename DNA, typename Ind = Individual<DNA>> class GA {
 		csv << "generation";
 		if (genStats.size() > 0) {
 			for (const auto &cat : genStats[0]) {
-				std::stringstream column;
-				column << cat.first << "_";
+                                std::string column = cat.first;
+                                if (column.rfind("cs_", 0) == 0)
+                                    column = column.substr(3);
+                                column += "_";
 				for (const auto &s : cat.second) {
-					csv << "," << column.str() << s.first;
+                                        csv << "," << column << s.first;
 				}
 			}
 			csv << endl;
